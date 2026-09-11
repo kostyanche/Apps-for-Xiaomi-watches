@@ -1,0 +1,30 @@
+<template>
+  <div class="container">
+    <text class="title">Hello World</text>
+  </div>
+</template>
+
+<style>
+  .container {
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+  }
+  .title {
+    font-size: 48px;
+    color: #000000;
+  }
+</style>
+
+<script>
+  export default {
+    data: {
+      componentName: 'hello'
+    },
+    onInit() {
+      console.log("Hello World in console");
+    }
+  }
+</script>

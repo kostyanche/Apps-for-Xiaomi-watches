@@ -1,0 +1,317 @@
+<template>
+  <div class="page">
+    <div class="hud">
+      <text class="game-title">GEOMETRY RUN</text>
+      <text class="score">SCORE {{score}}</text>
+    </div>
+
+    <div class="game">
+      <div class="sky"></div>
+
+      <div class="stars">
+        <text class="star s1">✦</text>
+        <text class="star s2">•</text>
+        <text class="star s3">✦</text>
+        <text class="star s4">•</text>
+      </div>
+
+      <div class="ground"></div>
+      <div class="ground-line"></div>
+
+      <div class="player p0" if="playerFrame === 0"></div>
+      <div class="player p1" if="playerFrame === 1"></div>
+      <div class="player p2" if="playerFrame === 2"></div>
+
+      <div class="obstacle o0" if="obstacleFrame === 0"></div>
+      <div class="obstacle o1" if="obstacleFrame === 1"></div>
+      <div class="obstacle o2" if="obstacleFrame === 2"></div>
+      <div class="obstacle o3" if="obstacleFrame === 3"></div>
+      <div class="obstacle o4" if="obstacleFrame === 4"></div>
+      <div class="obstacle o5" if="obstacleFrame === 5"></div>
+      <div class="obstacle o6" if="obstacleFrame === 6"></div>
+      <div class="obstacle o7" if="obstacleFrame === 7"></div>
+      <div class="obstacle o8" if="obstacleFrame === 8"></div>
+      <div class="obstacle o9" if="obstacleFrame === 9"></div>
+      <div class="obstacle o10" if="obstacleFrame === 10"></div>
+
+      <div class="start-screen" if="!running && !gameOver">
+        <text class="big">TAP TO START</text>
+        <text class="small">TAP = JUMP</text>
+      </div>
+
+      <div class="game-over" if="gameOver">
+        <text class="over">GAME OVER</text>
+        <text class="final-score">SCORE {{score}}</text>
+        <text class="retry">TAP TO RETRY</text>
+      </div>
+
+      <input class="tap-zone" type="button" value="" onclick="tap" />
+    </div>
+  </div>
+</template>
+
+<script>
+export default {
+  data: {
+    score: 0,
+    running: false,
+    gameOver: false,
+    obstacleFrame: 10,
+    playerFrame: 0,
+    jumpState: 0,
+    tickId: null,
+    tick: 0,
+    speed: 0
+  },
+
+  start() {
+    this.score = 0
+    this.gameOver = false
+    this.running = true
+    this.obstacleFrame = 10
+    this.jumpState = 0
+    this.playerFrame = 0
+    this.tick = 0
+    this.speed = 0
+
+    if (this.tickId) {
+      clearInterval(this.tickId)
+      this.tickId = null
+    }
+
+    this.tickId = setInterval(() => {
+      this.updateGame()
+    }, 80)
+  },
+
+  tap() {
+    if (!this.running) {
+      this.start()
+      return
+    }
+
+    if (this.jumpState === 0) {
+      this.jumpState = 1
+      this.playerFrame = 1
+    } else if (this.jumpState === 1) {
+      this.jumpState = 2
+      this.playerFrame = 2
+    }
+  },
+
+  updateGame() {
+    if (!this.running) return
+
+    this.tick += 1
+
+    // Move obstacles from right to left.
+    this.obstacleFrame -= 1
+    if (this.obstacleFrame < 0) {
+      this.obstacleFrame = 10
+      this.score += 1
+    }
+
+    // Simple 3-step jump animation.
+    if (this.jumpState === 1) {
+      this.jumpState = 2
+      this.playerFrame = 2
+    } else if (this.jumpState === 2) {
+      this.jumpState = 3
+    } else if (this.jumpState === 3) {
+      this.jumpState = 4
+    } else if (this.jumpState === 4) {
+      this.jumpState = 0
+      this.playerFrame = 0
+    }
+
+    // Collision window: obstacle is near the player.
+    // A jump keeps the player safe.
+    if (this.obstacleFrame === 2 || this.obstacleFrame === 1) {
+      if (this.jumpState === 0) {
+        this.endGame()
+      }
+    }
+  },
+
+  endGame() {
+    this.running = false
+    this.gameOver = true
+    if (this.tickId) {
+      clearInterval(this.tickId)
+      this.tickId = null
+    }
+  },
+
+  onDestroy() {
+    if (this.tickId) {
+      clearInterval(this.tickId)
+      this.tickId = null
+    }
+  }
+}
+</script>
+
+<style>
+.page {
+  width: 100%;
+  height: 100%;
+  flex-direction: column;
+  background-color: #070914;
+}
+
+.hud {
+  width: 100%;
+  height: 72px;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background-color: #11142a;
+}
+
+.game-title {
+  font-size: 23px;
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.score {
+  font-size: 17px;
+  color: #7ee7ff;
+  margin-top: 3px;
+}
+
+.game {
+  position: relative;
+  width: 100%;
+  height: 448px;
+  background-color: #171b3c;
+  overflow: hidden;
+}
+
+.sky {
+  position: absolute;
+  width: 100%;
+  height: 320px;
+  left: 0;
+  top: 0;
+  background-color: #181d42;
+}
+
+.stars {
+  position: absolute;
+  width: 100%;
+  height: 180px;
+  left: 0;
+  top: 0;
+}
+
+.star {
+  position: absolute;
+  color: #9eabff;
+  font-size: 18px;
+}
+
+.s1 { left: 23px; top: 35px; }
+.s2 { left: 102px; top: 72px; }
+.s3 { left: 174px; top: 28px; }
+.s4 { left: 146px; top: 118px; }
+
+.ground {
+  position: absolute;
+  left: 0;
+  top: 350px;
+  width: 100%;
+  height: 98px;
+  background-color: #0a0d1d;
+}
+
+.ground-line {
+  position: absolute;
+  left: 0;
+  top: 348px;
+  width: 100%;
+  height: 4px;
+  background-color: #52e6ff;
+}
+
+.player {
+  position: absolute;
+  left: 29px;
+  width: 42px;
+  height: 42px;
+  background-color: #ffdf46;
+  border-radius: 7px;
+  border: 4px solid #ffffff;
+}
+
+.p0 { top: 304px; }
+.p1 { top: 249px; transform: rotate(18deg); }
+.p2 { top: 215px; transform: rotate(35deg); }
+
+.obstacle {
+  position: absolute;
+  width: 42px;
+  height: 42px;
+  background-color: #ff477e;
+  transform: rotate(45deg);
+  border: 4px solid #ffffff;
+  top: 306px;
+}
+
+.o0 { left: 8px; }
+.o1 { left: 30px; }
+.o2 { left: 52px; }
+.o3 { left: 82px; }
+.o4 { left: 108px; }
+.o5 { left: 136px; }
+.o6 { left: 164px; }
+.o7 { left: 191px; }
+.o8 { left: 220px; }
+.o9 { left: 249px; }
+.o10 { left: 274px; }
+
+.start-screen,
+.game-over {
+  position: absolute;
+  left: 0;
+  top: 150px;
+  width: 100%;
+  height: 150px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: #10132b;
+  opacity: 0.92;
+}
+
+.big,
+.over {
+  font-size: 27px;
+  color: #ffffff;
+  font-weight: 700;
+  text-align: center;
+}
+
+.small,
+.final-score,
+.retry {
+  font-size: 18px;
+  color: #7ee7ff;
+  margin-top: 8px;
+  text-align: center;
+}
+
+.retry {
+  color: #ffdf46;
+  margin-top: 14px;
+}
+
+.tap-zone {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 448px;
+  opacity: 0;
+}
+</style>
